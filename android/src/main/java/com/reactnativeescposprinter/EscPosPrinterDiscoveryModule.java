@@ -134,10 +134,13 @@ public class EscPosPrinterDiscoveryModule extends ReactContextBaseJavaModule imp
       return;
     }
 
-    LocationRequest locationRequest = LocationRequest.create();
-    locationRequest.setInterval(10000);
-    locationRequest.setFastestInterval(5000);
-    locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+      LocationRequest locationRequest = 
+     new LocationRequest.Builder(
+      LocationRequest.PRIORITY_HIGH_ACCURACY,
+      10000
+     ).build();
+
     LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
 
     SettingsClient client = LocationServices.getSettingsClient(reactContext);
