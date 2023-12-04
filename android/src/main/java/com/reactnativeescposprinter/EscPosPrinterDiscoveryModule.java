@@ -260,7 +260,11 @@ public class EscPosPrinterDiscoveryModule extends ReactContextBaseJavaModule imp
 
           mPrinterList.pushMap(printerData);
 
-          sendEvent(reactContext, "onDiscovery", mPrinterList);
+          WritableMap _event = Arguments.createMap();
+
+          _event.putArray("printers", mPrinterList);
+         
+          sendEvent(reactContext, "onDiscovery", _event);
         }
       });
     }
