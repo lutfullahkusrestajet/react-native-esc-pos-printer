@@ -39,13 +39,17 @@ import com.google.android.gms.common.api.CommonStatusCodes;
 
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.ConnectionResult;
-
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 @ReactModule(name = EscPosPrinterDiscoveryModule.NAME)
 public class EscPosPrinterDiscoveryModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
   private Context mContext;
-  private WritableArray mPrinterList = null;
+  
+  private JSONArray mPrinterList = null;
+
   private final ReactApplicationContext reactContext;
 
   public static final String NAME = "EscPosPrinterDiscovery";
@@ -179,13 +183,13 @@ public class EscPosPrinterDiscoveryModule extends ReactContextBaseJavaModule imp
   }
 
   private void sendEvent(ReactApplicationContext reactContext, String eventName, @Nullable WritableArray params) {
-    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName, params);
+    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName,params);
   }
 
   @ReactMethod
   private void startDiscovery(final ReadableMap paramsMap, Promise promise) {
     FilterOption mFilterOption = getFilterOptionsFromParams(paramsMap);
-    mPrinterList = Arguments.createArray();
+    mPrinterList = new JSONArray();
 
     try {
       Discovery.start(mContext, mFilterOption, mDiscoveryListener);
@@ -242,28 +246,54 @@ public class EscPosPrinterDiscoveryModule extends ReactContextBaseJavaModule imp
     return mFilterOption;
   }
 
-  private DiscoveryListener mDiscoveryListener = new DiscoveryListener() {
+   private DiscoveryListener mDiscoveryListener = new DiscoveryListener() {
     @Override
     public void onDiscovery(final DeviceInfo deviceInfo) {
 
       UiThreadUtil.runOnUiThread(new Runnable() {
         @Override
         public synchronized void run() {
-          WritableMap printerData = Arguments.createMap();
+
+        JSONObject printerData = new JSONObject();
+
+try{
+          printerData.put("target", deviceInfo.getTarget());
+          printerData.put("deviceName", deviceInfo.getDeviceName());
+          printerData.put("ipAddress", deviceInfo.getIpAddress());
+          printerData.put("macAddress", deviceInfo.getMacAddress());
+          printerData.put("bdAddress", deviceInfo.getBdAddress());
+
+          mPrinterList.put(printerData);
+
+ } catch (JSONException e) {
+         throw new RuntimeException(e);
+     }
 
 
-          printerData.putString("target", deviceInfo.getTarget());
-          printerData.putString("deviceName", deviceInfo.getDeviceName());
-          printerData.putString("ipAddress", deviceInfo.getIpAddress());
-          printerData.putString("macAddress", deviceInfo.getMacAddress());
-          printerData.putString("bdAddress", deviceInfo.getBdAddress());
 
-          mPrinterList.pushMap(printerData);
+          WritableArray writableArray = Arguments.createArray();
 
-          WritableArray event2Test = Arguments.createArray();
+           for (int i = 0; i < mPrinterList.length(); i++) {
 
-         
-          sendEvent(reactContext, "onDiscovery", event2Test);
+                 try{
+                    WritableMap printerData2 = Arguments.createMap();
+
+                    JSONObject jsonObject= mPrinterList.getJSONObject(i);
+
+                    printerData2.putString("target", jsonObject.getString("target"));
+                    printerData2.putString("deviceName", jsonObject.getString("deviceName"));
+                    printerData2.putString("ipAddress", jsonObject.getString("ipAddress"));
+                    printerData2.putString("macAddress", jsonObject.getString("macAddress"));
+                    printerData2.putString("bdAddress", jsonObject.getString("bdAddress"));
+                   writableArray.pushMap(printerData2);
+                 } catch (JSONException e) {
+         throw new RuntimeException(e);
+     }
+             
+            }
+
+          sendEvent(reactContext, "onDiscovery", writableArray);
+
         }
       });
     }
