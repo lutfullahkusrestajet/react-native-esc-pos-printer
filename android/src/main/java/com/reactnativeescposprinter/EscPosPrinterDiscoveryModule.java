@@ -262,7 +262,6 @@ public class EscPosPrinterDiscoveryModule extends ReactContextBaseJavaModule imp
 
           WritableArray event2Test = Arguments.createArray();
 
-          event2Test.pushMap(printerData);
          
           sendEvent(reactContext, "onDiscovery", event2Test);
         }
